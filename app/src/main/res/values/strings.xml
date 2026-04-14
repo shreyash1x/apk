@@ -7,4 +7,8 @@
     <string name="notification_title">The Result is: %s</string>
     <string name="please_enter_a_number">Please Enter a Number</string>
     <string name="compose_version">In Compose</string>
+    <string name="recording_service_title">Call Recording Service</string>
+    <string name="recording_service_content">Monitoring calls and recording audio.</string>
+    <string name="start_service">Start Service</string>
+    <string name="stop_service">Stop Service</string>
 </resources>

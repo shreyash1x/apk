@@ -1,114 +1,253 @@
-# kotlin-android-template 🤖
+PRODUCT REQUIREMENTS DOCUMENT (PRD)
 
-[![Use this template](https://img.shields.io/badge/from-kotlin--android--template-brightgreen?logo=dropbox)](https://github.com/cortinico/kotlin-android-template/generate) ![Pre Merge Checks](https://github.com/cortinico/kotlin-android-template/workflows/Pre%20Merge%20Checks/badge.svg)  ![License](https://img.shields.io/github/license/cortinico/kotlin-android-template.svg) ![Language](https://img.shields.io/github/languages/top/cortinico/kotlin-android-template?color=blue&logo=kotlin)
+Project: Call Recorder (Pixel-Compatible)
 
-A simple Github template that lets you create an **Android/Kotlin** project and be up and running in a **few seconds**. 
+---
 
-This template is focused on delivering a project with **static analysis** and **continuous integration** already in place.
+1. Overview
 
-## How to use 👣
+Build a native Android call recording application using Kotlin, designed to work reliably on restricted devices like the Google Pixel 9a.
 
-Just click on [![Use this template](https://img.shields.io/badge/-Use%20this%20template-brightgreen)](https://github.com/cortinico/kotlin-android-template/generate) button to create a new repo starting from this template.
+The application will:
 
-Once created don't forget to update the:
-- [App ID](buildSrc/src/main/java/Coordinates.kt)
-- AndroidManifest ([here](app/src/main/AndroidManifest.xml) and [here](library-compose/src/main/AndroidManifest.xml))
-- Package of the source files
+- Automatically detect phone calls
+- Record audio using microphone (speaker-assisted)
+- Save and organize recordings
+- Run reliably in background using a foreground service
 
-## Features 🎨
+---
 
-- **100% Kotlin-only template**.
-- 4 Sample modules (Android app, Android library, Kotlin library, Jetpack Compose Activity).
-- Jetpack Compose setup ready to use. 
-- Sample Espresso, Instrumentation & JUnit tests.
-- 100% Gradle Kotlin DSL setup.
-- CI Setup with GitHub Actions.
-- Publish to **Maven Central** with Github Actions.
-- Dependency versions managed via `buildSrc`.
-- Kotlin Static Analysis via `detekt` and `ktlint`.
-- Issues Template (bug report + feature request).
-- Pull Request Template.
+2. Goals
 
-## Troubleshooting
+Primary Goals
 
-For help with issues which you might encounter when using this template, please refer to [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
+- Reliable call detection (incoming and outgoing)
+- Automatic start and stop recording
+- Stable background recording using foreground service
+- Structured file storage with metadata
 
-## Gradle Setup 🐘
+Secondary Goals
 
-This template is using [**Gradle Kotlin DSL**](https://docs.gradle.org/current/userguide/kotlin_dsl.html) as well as the [Plugin DSL](https://docs.gradle.org/current/userguide/plugins.html#sec:plugins_block) to setup the build.
+- Simple playback UI
+- Search and filter recordings
+- Future support for transcription
 
-Dependencies are centralized inside the Gradle Version Catalog in the [libs.versions.toml](gradle/libs.versions.toml) file in the `gradle` folder.
+---
 
-## Static Analysis 🔍
+3. Constraints
 
-This template is using [**detekt**](https://github.com/detekt/detekt) to analyze the source code, with the configuration that is stored in the [detekt.yml](config/detekt/detekt.yml) file (the file has been generated with the `detektGenerateConfig` task). It also uses the **detekt-formatting** plugin which includes the ktlint rules (see https://detekt.dev/docs/rules/formatting/).
+- Internal call audio access is not available (Android restriction)
+- Audio must be recorded using microphone (MIC)
+- Must comply with Android 13+ background execution limits
+- Foreground service is mandatory for recording
 
-## CI ⚙️
+---
 
-This template is using [**GitHub Actions**](https://github.com/cortinico/kotlin-android-template/actions) as CI. You don't need to setup any external service and you should have a running CI once you start using this template, just make sure that you turn on the "Read and Write permissions" on the Action Settings of your repository.
+4. Tech Stack
 
-There are currently the following workflows available:
-- [Validate Gradle Wrapper](.github/workflows/gradle-wrapper-validation.yml) - Will check that the gradle wrapper has a valid checksum
-- [Pre Merge Checks](.github/workflows/pre-merge.yaml) - Will run the `build`, `check` and `publishToMavenLocal` tasks.
-- [Publish Snapshot](.github/workflows/publish-snapshot.yaml) - Will publish a `-SNAPSHOT` of the libraries to Sonatype.
-- [Publish Release](.github/workflows/publish-release.yaml) - Will publish a new release version of the libraries to Maven Central on tag pushes.
+- Language: Kotlin
+- Architecture: MVVM (lightweight)
+- Build System: Gradle
+- Base Template:
+- Min SDK: 24
+- Target SDK: 34
 
-## Publishing 🚀
+---
 
-The template is setup to be **ready to publish** a library/artifact on a Maven Repository.
+5. Core Features
 
-For every module you want to publish you simply have to add the `publish` plugin:
+5.1 Call Detection
 
-```
-plugins {
-    publish
-}
-```
+Description:
+Detect call lifecycle events.
 
-### To Maven Central
+Implementation:
 
-In order to use this template to publish on Maven Central, you need to configure some secrets on your repository:
+- Use TelephonyManager with PhoneStateListener
+- Detect states:
+  - CALL_STATE_RINGING
+  - CALL_STATE_OFFHOOK
+  - CALL_STATE_IDLE
 
-| Secret name | Value |
-| --- | --- | 
-| `ORG_GRADLE_PROJECT_NEXUS_USERNAME` | The username you use to access Sonatype's services (such as [Nexus](https://oss.sonatype.org/) and [Jira](https://issues.sonatype.org/)) |
-| `ORG_GRADLE_PROJECT_NEXUS_PASSWORD` | The password you use to access Sonatype's services (such as [Nexus](https://oss.sonatype.org/) and [Jira](https://issues.sonatype.org/)) |
-| `ORG_GRADLE_PROJECT_SIGNING_KEY` | The GPG Private key to sign your artifacts. You can obtain it with `gpg --armor --export-secret-keys <your@email.here>` or you can create one key online on [pgpkeygen.com](https://pgpkeygen.com). The key starts with a `-----BEGIN PGP PRIVATE KEY BLOCK-----`. |
-| `ORG_GRADLE_PROJECT_SIGNING_PWD` | The passphrase to unlock your private key (you picked it when creating the key). |
+Behavior:
 
-The template already attaches `-sources.jar` to your publications via the new AGP publishing DSL.
+- Start recording when state becomes OFFHOOK
+- Stop recording when state becomes IDLE
 
-Once set up, the following workflows will take care of publishing:
+---
 
-- [Publish Snapshot](.github/workflows/publish-snapshot.yaml) - To publish `-SNAPSHOT` versions to Sonatype. The workflow is setup to run either manually (with `workflow_dispatch`) or on every merge.
-- [Publish Release](.github/workflows/publish-release.yaml) - Will publish a new release version of the libraries to Maven Central on tag pushes. You can trigger the workflow also manually if needed.
+5.2 Audio Recording
 
-### To Jitpack
+Description:
+Record call audio via microphone.
 
-If you're using [JitPack](https://jitpack.io/), you don't need any further configuration and you can just configure the repo on JitPack.
+Implementation:
 
-You probably want to disable the [Publish Snapshot] and [Publish Release](.github/workflows/publish-release.yaml) workflows (delete the files), as Jitpack will take care of that for you.
+- Use MediaRecorder
+- Audio source: MIC
+- Output format: MPEG_4 or 3GP
+- Audio encoder: AAC
 
-## Project Structure
+Enhancement:
 
-The project includes three sub-projects, each in their own subdirectories:
+- Enable speakerphone using AudioManager for better capture
 
-- **`app`:** The source for the final Android application.
-- **`library-android`:** The source for an Android library including UI.
-- **`library-kotlin`:** The source for a UI-less Kotlin library.
-- **`library-compose`:** The source for a UI library with Jetpack Compose library.
+---
 
-The following additional top-level directories configure & support building the app & projects:
+5.3 Foreground Service
 
-- **`buildSrc`:** Contains shared Gradle logic as [precompiled script plugins](https://docs.gradle.org/current/userguide/custom_plugins.html#sec:precompiled_plugins)
-- **`config`:** Contains the [Detekt configuration file](https://detekt.dev/docs/introduction/configurations/).
-- **`gradle`:** Contains Gradle Configuration files such as the Gradle Version Catalog and the [Gradle Wrapper](https://docs.gradle.org/current/userguide/gradle_wrapper.html).
+Description:
+Ensure recording continues in background.
 
-Finally, the following hidden top-level directories provide functionality for specific development systems:
+Implementation:
 
-- **`.github`:** Defines the [Github Actions](https://github.com/features/actions) CI tasks and templates for new pull requests, issues, etc.
-- **`.idea`:** Sets common initial project settings when the project is opened in [Android Studio](https://developer.android.com/studio) or [IntelliJ IDEA](https://www.jetbrains.com/idea/).
+- Create RecordingService
+- Use persistent notification
+- Start service when call begins
+- Stop service when call ends
 
-## Contributing 🤝
+---
 
-Feel free to open a issue or submit a pull request for any bugs/improvements.
+5.4 File Management
+
+Description:
+Store recordings in structured format.
+
+Naming Convention:
+Call_<number>_<YYYYMMDD_HHMMSS>.mp3
+
+Storage:
+
+- App-specific internal storage
+
+---
+
+5.5 Recording List UI
+
+Description:
+Display all saved recordings.
+
+Features:
+
+- RecyclerView list
+- Show:
+  - Phone number
+  - Date and time
+  - Duration (optional)
+
+---
+
+5.6 Playback
+
+Description:
+Play recorded files.
+
+Implementation:
+
+- Use MediaPlayer
+
+---
+
+6. Permissions
+
+Required permissions:
+
+- RECORD_AUDIO
+- READ_PHONE_STATE
+- FOREGROUND_SERVICE
+- READ_CALL_LOG (optional)
+
+All permissions must be requested at runtime.
+
+---
+
+7. Architecture
+
+Folder Structure
+
+app/
+├── ui/
+├── service/
+├── recorder/
+├── telephony/
+├── data/
+
+---
+
+Modules
+
+telephony/
+
+- CallStateManager
+- Handles call detection
+
+recorder/
+
+- RecorderManager
+- Manages MediaRecorder lifecycle
+
+service/
+
+- RecordingService
+- Handles foreground execution
+
+data/
+
+- Recording model
+- File metadata handling
+
+---
+
+8. Flow
+
+1. App initializes call listener
+2. Call detected (incoming or outgoing)
+3. State changes to OFFHOOK
+4. Foreground service starts
+5. Recording starts
+6. Call ends (IDLE state)
+7. Recording stops
+8. File is saved
+9. UI updates with new recording
+
+---
+
+9. Edge Cases
+
+- Permission denied: show error and disable feature
+- App killed: ensure service restart strategy if possible
+- Recorder failure: handle exceptions and retry safely
+- Low storage: stop recording and notify user
+
+---
+
+10. Non-Functional Requirements
+
+- App must not crash during calls
+- Recording must start within 1 second of call connection
+- Battery usage must be optimized
+- Code must follow modular architecture
+- Logs should be added for debugging
+
+---
+
+11. Future Enhancements
+
+- Speech-to-text transcription
+- Cloud backup integration
+- Contact name resolution
+- Search by keywords
+- AI-based summaries
+
+---
+
+12. Agent Instructions
+
+- Do not modify base project structure from template
+- Implement features incrementally
+- Ensure Gradle builds successfully after each change
+- Use Kotlin only (no Java)
+- Use foreground service for all recording operations
+- Validate runtime permissions before execution
+
+---
