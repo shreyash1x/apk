@@ -1,0 +1,41 @@
+# Codemagic configuration file
+# Check https://docs.codemagic.io/yaml/configuration/ for more information
+
+workflows:
+  android-template-workflow:
+    name: Android Template Workflow
+    max_build_duration: 60
+    instance_type: mac_mini_m1
+    environment:
+      android_sdk: 36
+      java: 17
+    triggering:
+      events:
+        - push
+        - pull_request
+      branch_patterns:
+        - pattern: '*'
+          include: true
+          source: true
+    cache:
+      cache_paths:
+        - ~/.gradle/caches
+    scripts:
+      - name: Set up local.properties
+        script: |
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
+      - name: Build and Test
+        script: |
+          ./gradlew build publishToMavenLocal --continue
+      - name: Static Analysis
+        script: |
+          ./gradlew detekt
+      - name: Assemble Debug APK
+        script: |
+          ./gradlew assembleDebug
+    artifacts:
+      - app/build/outputs/apk/debug/*.apk
+    publishing:
+      email:
+        recipients:
+          - amanshukla131@gmail.com
